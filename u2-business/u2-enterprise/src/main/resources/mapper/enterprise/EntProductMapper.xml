@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.u2.business.enterprise.dao.EntProductMapper">
+
+    <resultMap type="EntProduct" id="EntProductResult">
+        <result property="productId" column="product_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="ancestors" column="ancestors"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="price" column="price"/>
+        <result property="nature" column="nature"/>
+        <result property="stock" column="stock"/>
+        <result property="sellNum" column="sell_num"/>
+        <result property="viewNum" column="view_num"/>
+        <result property="commentNum" column="comment_num"/>
+        <result property="content" column="content"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="category" javaType="EntCategory" resultMap="categoryResult"/>
+    </resultMap>
+
+    <resultMap id="categoryResult" type="EntCategory">
+        <id property="id" column="category_id"/>
+        <result property="name" column="category_name"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <resultMap id="brandResult" type="EntBrand">
+        <id property="brandId" column="brand_id"/>
+        <result property="brandName" column="brand_name"/>
+        <result property="logoUrl" column="logo_url"/>
+    </resultMap>
+
+    <sql id="selectEntProductVo">
+        select p.product_id,
+               p.category_id,
+               p.product_name,
+               p.ancestors,
+               p.order_num,
+               p.image_url,
+               p.price,
+               p.nature,
+               p.stock,
+               p.sell_num,
+               p.view_num,
+               p.comment_num,
+               p.content,
+               p.create_by,
+               p.create_time,
+               p.update_by,
+               p.update_time,
+               c.category_name,
+               c.status,
+               b.brand_name,
+               b.logo_url
+        from ent_product p
+                 left join ent_category c on p.category_id = c.category_id
+                 left join ent_brand b on p.brand_id = b.brand_id
+    </sql>
+
+    <select id="selectProductList" parameterType="EntProduct" resultMap="EntProductResult">
+        <include refid="selectEntProductVo"/>
+        <where>
+            <if test="productName != null  and productName != ''">and p.product_name like concat('%', #{productName},
+                '%')
+            </if>
+            <if test="nature != null and nature != ''">and p.nature = #{nature}</if>
+            <if test="stock != null and stock != ''">and p.stock >= #{stock}</if>
+            <if test="categoryId != null and categoryId != 0">and find_in_set(#{categoryId}, ancestors)</if>
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                AND date_format(p.create_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                AND date_format(p.create_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectProductById" parameterType="Long" resultMap="EntProductResult">
+        <include refid="selectEntProductVo"/>
+        where p.product_id = #{productId}
+    </select>
+
+    <select id="selectProductByProductName" parameterType="String" resultMap="EntProductResult">
+        <include refid="selectEntProductVo"/>
+        where p.product_name = #{productName}
+    </select>
+
+    <select id="selectProductListByCategoryId" parameterType="Long" resultMap="EntProductResult">
+        select *
+        from ent_product
+        where find_in_set(#{categoryId}, ancestors)
+    </select>
+
+    <select id="checkProductNameUnique" parameterType="String" resultMap="EntProductResult">
+        select product_id, product_name
+        from ent_product
+        where product_name = #{productName}
+        limit 1
+    </select>
+
+    <insert id="insertProduct" parameterType="EntProduct" useGeneratedKeys="true" keyProperty="id">
+        insert into ent_product(
+        <if test="productId != null and productId != 0">product_id,</if>
+        <if test="categoryId != null productId != 0">category_id,</if>
+        <if test="productName != null and productName != ''">product_name,</if>
+        <if test="ancestors != null and ancestors != ''">ancestors,</if>
+        <if test="imageUrl != null and imageUrl != ''">image_url,</if>
+        <if test="price != null">price,</if>
+        <if test="nature != null">nature,</if>
+        <if test="stock != null">stock,</if>
+        <if test="sellNum != null">sell_num,</if>
+        <if test="viewNum != null">view_num,</if>
+        <if test="commentNum != null">comment_num,</if>
+        <if test="content != null">content,</if>
+        <if test="createBy != null">create_by,</if>
+        create_time
+        )value (
+        <if test="productId != null and productId != 0">#{productId},</if>
+        <if test="categoryId != null and categoryId != 0">#{categoryId},</if>
+        <if test="productName != null and productName != ''">#{productName},</if>
+        <if test="ancestors != null and ancestors != ''">#{ancestors},</if>
+        <if test="imageUrl != null and imageUrl != ''">#{imageUrl},</if>
+        <if test="price != null">#{price},</if>
+        <if test="nature != null">#{nature},</if>
+        <if test="stock != null">#{stock},</if>
+        <if test="sellNum != null">#{sellNum},</if>
+        <if test="viewNum != null">#{viewNum},</if>
+        <if test="commentNum != null">#{commentNum},</if>
+        <if test="content != null">#{content},</if>
+        <if test="createBy != null">#{createBy},</if>
+        sysdate()
+        )
+    </insert>
+
+    <update id="updateProduct" parameterType="EntProduct">
+        update ent_product
+        <set>
+            <if test="categoryId != null and categoryId != 0">category_id = #{categoryId},</if>
+            <if test="productName != null and productName != ''">product_name = #{productName},</if>
+            <if test="ancestors != null and ancestors != ''">ancestors = #{ancestors},</if>
+            <if test="imageUrl != null and imageUrl != ''">image_url = #{imageUrl},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="nature != null">nature = #{nature},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="sellNum != null">sell_num = #{sellNum},</if>
+            <if test="viewNum != null">view_num = #{viewNum},</if>
+            <if test="commentNum != null">comment_num = #{commentNum},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where product_id = #{productId}
+    </update>
+
+    <delete id="deleteProductById" parameterType="Long">
+        delete
+        from ent_product
+        where product_id = #{productId}
+    </delete>
+
+    <delete id="deleteProductByIds" parameterType="Long">
+        delete from ent_product where product_id in
+        <foreach item="productId" collection="array" open="(" separator="," close=")">
+            #{productId}
+        </foreach>
+    </delete>
+</mapper>

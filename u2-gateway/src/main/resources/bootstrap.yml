@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: u2-gateway
+  profiles:
+    active: dev
+  cloud:
+#    sentinel:
+#      datasource:
+#        ds1:
+#          nacos:
+#            serverAddr: 127.0.0.1:8718
+#            dataId: sentinel-u2-gateway
+#            groupId: DEFAULT_GROUP
+#            data-type: json
+#            rule-type: flow
+    nacos:
+      discovery:
+        namespace: u2-cloud
+        server-addr: 192.168.244.132:8848
+      config:
+        namespace: u2-cloud
+        server-addr: 192.168.244.132:8848
+        file-extension: yaml
+        shared-configs:
+          - common-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}

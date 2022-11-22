@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.u2.business.enterprise.dao.EntOrderItemMapper">
+
+    <resultMap type="EntOrderItem" id="EntOrderItemResult">
+        <result property="id" column="id"/>
+        <result property="productId" column="product_id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="num" column="num"/>
+        <result property="money" column="money"/>
+        <association property="order" column="order_id" javaType="EntOrder" resultMap="orderResult"/>
+        <association property="product" column="product_id" javaType="EntProduct" resultMap="productResult"/>
+    </resultMap>
+
+    <resultMap type="EntOrder" id="orderResult">
+        <id property="orderId" column="order_id"/>
+        <result property="sn" column="sn"/>
+        <result property="address" column="address"/>
+        <result property="delFlag" column="location"/>
+    </resultMap>
+
+    <resultMap type="EntProduct" id="productResult">
+        <id property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="price" column="price"/>
+    </resultMap>
+
+    <sql id="selectOrderItemVo">
+        select i.id,
+               i.order_id,
+               i.product_id,
+               i.num,
+               i.money,
+               o.sn,
+               o.address,
+               o.del_flag,
+               p.product_name,
+               p.price,
+               p.image_url
+        from ent_order_item i
+                 join ent_order o on i.order_id = o.order_id
+                 join ent_product p on i.product_id = p.product_id
+    </sql>
+
+    <select id="selectOrderItemList" parameterType="EntOrderItem" resultMap="EntOrderItemResult">
+        <include refid="selectOrderItemVo"/>
+        where o.del_flag = '0'
+        <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+        <if test="orderId != null and orderId != 0 ">and i.order_id = #{orderId}</if>
+    </select>
+
+    <select id="selectOrderItemById" parameterType="Long" resultMap="EntOrderItemResult">
+        <include refid="selectOrderItemVo"/>
+        where i.id = #{id} and o.del_flag = '0'
+    </select>
+
+    <select id="selectOrderItemListByOrderId" parameterType="Long" resultMap="EntOrderItemResult">
+        <include refid="selectOrderItemVo"/>
+        where i.orderId = #{orderId} and o.del_flag = '0'
+    </select>
+
+    <select id="selectOrderItemListBySn" parameterType="String" resultMap="EntOrderItemResult">
+        <include refid="selectOrderItemVo"/>
+        where o.sn = #{sn} and o.del_flag = '0'
+    </select>
+
+    <insert id="insertOrderItem" parameterType="EntOrderItem" useGeneratedKeys="true" keyProperty="id">
+        insert into ent_order_item(
+        <if test="productId != null">product_id,</if>
+        <if test="orderId != null">order_id,</if>
+        <if test="num != null">num,</if>
+        <if test="money != null">money</if>
+        )value (
+        <if test="productId != null">#{productId},</if>
+        <if test="orderId != null">#{orderId},</if>
+        <if test="num != null">#{num},</if>
+        <if test="money != null">#{money}</if>
+        )
+    </insert>
+
+    <update id="updateOrderItem" parameterType="EntOrderItem">
+        update ent_order_item
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="orderId != null">order_id = #{orderId},</if>
+            <if test="num != null">num = #{num},</if>
+            <if test="money != null">money = #{money},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteOrderItemById" parameterType="Long">
+        delete
+        from ent_order_item
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteOrderItemByIds" parameterType="String">
+        delete from ent_order_item where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

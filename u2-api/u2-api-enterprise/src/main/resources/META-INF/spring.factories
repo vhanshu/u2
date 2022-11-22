@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.u2.api.enterprise.service.factory.RemoteMemberFallbackFactory

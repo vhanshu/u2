@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.u2.business.enterprise.dao.EntBrandMapper">
+
+    <resultMap type="EntBrand" id="BrandResult">
+        <result property="brandId" column="id"/>
+        <result property="brandName" column="brand_name"/>
+        <result property="logoUrl" column="logo_url"/>
+        <result property="partnerId" column="partner_id"/>
+        <result property="category" column="category"/>
+        <result property="isAgent" column="is_agent"/>
+        <result property="isOriginal" column="is_original"/>
+        <result property="isEgo" column="is_ego"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createBy" column="create_by"/>
+        <association property="partner" column="partner_id" javaType="EntPartner" resultMap="PartnerResult"/>
+    </resultMap>
+    <resultMap id="PartnerResult" type="EntPartner">
+        <id property="partnerId" column="partner_id"/>
+        <result property="partnerName" column="partner_name"/>
+        <result property="userName" column="user_name"/>
+        <result property="phone" column="phone"/>
+    </resultMap>
+    <sql id="selectEntBrandVo">
+        select b.brand_id,
+               b.brand_name,
+               b.logo_url,
+               b.partner_id,
+               b.category,
+               b.is_agent,
+               b.is_original,
+               b.is_ego,
+               b.create_time,
+               b.update_time,
+               b.update_by,
+               b.create_by,
+               p.partner_id,
+               p.partner_name,
+               p.user_name,
+               p.phone
+        from ent_brand b
+                 left join ent_partner p on b.partner_id = p.partner_id
+
+    </sql>
+
+    <select id="selectBrandList" parameterType="EntBrand" resultMap="BrandResult">
+        <include refid="selectEntBrandVo"/>
+        where p.del_flag = '0'
+        <if test="brandName != null  and brandName != ''">and brandName like concat('%', #{brandName}, '%')</if>
+        <if test="partnerId != null ">and partner_id = #{partnerId}</if>
+        <if test="category != null ">and category = #{category}</if>
+        <if test="isAgent != null ">and is_agent = #{isAgent}</if>
+        <if test="isOriginal != null ">and is_original = #{isOriginal}</if>
+        <if test="isEgo != null ">and is_u2 = #{isEgo}</if>
+    </select>
+
+    <select id="selectBrandById" parameterType="Long" resultMap="BrandResult">
+        <include refid="selectEntBrandVo"/>
+        where b.brand_id = #{brandId} and p.del_flag = '0'
+    </select>
+
+    <select id="selectBrandByBrandName" parameterType="String" resultMap="BrandResult">
+        <include refid="selectEntBrandVo"/>
+        where b.brand_name = #{brandName} and p.del_flag = '0'
+    </select>
+
+    <select id="selectBrandListByPartnerId" parameterType="Long" resultMap="BrandResult">
+        <include refid="selectEntBrandVo"/>
+        where b.partner_id = #{partnerId} and p.del_flag = '0'
+    </select>
+
+    <select id="checkBrandNameUnique" parameterType="String" resultMap="BrandResult">
+        select brand_id, brand_name
+        from ent_brand
+        where brand_name = #{brandName}
+        limit 1
+    </select>
+
+    <select id="checkBrandExistProduct" parameterType="Long" resultType="int">
+        select count(1)
+        from ent_product
+        where brand_id = #{brandId}
+    </select>
+
+    <insert id="insertBrand" parameterType="EntBrand" useGeneratedKeys="true" keyProperty="brandId">
+        insert into ent_brand(
+        <if test="brandId != null and brandId != 0">brand_id,</if>
+        <if test="brandName != null and brandName != ''">brand_name,</if>
+        <if test="logoUrl != null and logoUrl != ''">logo_url,</if>
+        <if test="partnerId != null">partner_id,</if>
+        <if test="category != null">category,</if>
+        <if test="isAgent != null">is_agent,</if>
+        <if test="isOriginal != null">is_original,</if>
+        <if test="isEgo != null">is_ego,</if>
+        <if test="createBy != null">create_by,</if>
+        create_time
+        )values(
+        <if test="brandId != null and brandId != 0">#{brandId},</if>
+        <if test="brandName != null and brandName != ''">#{brandName},</if>
+        <if test="logoUrl != null and logoUrl != ''">#{logoUrl},</if>
+        <if test="partnerId != null">#{partnerId},</if>
+        <if test="category != null">#{category},</if>
+        <if test="isAgent != null">#{isAgent},</if>
+        <if test="isOriginal != null">#{isOriginal},</if>
+        <if test="isEgo != null">#{isEgo},</if>
+        <if test="createBy != null">#{createBy},</if>
+        sysdate()
+        )
+    </insert>
+
+    <update id="updateBrand" parameterType="EntBrand">
+        update ent_brand
+        <set>
+            <if test="brandName != null and brandName != ''">brandName = #{brandName},</if>
+            <if test="logoUrl != null and logoUrl != ''">logo_url = #{logoUrl},</if>
+            <if test="partnerId != null">partner_id = #{partnerId},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="isAgent != null">is_agent = #{isAgent},</if>
+            <if test="isOriginal != null">is_original = #{isOriginal},</if>
+            <if test="isEgo != null">is_ego = #{isEgo},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where brand_id = #{brandId}
+    </update>
+
+    <update id="updateBrandLogoUrl" parameterType="EntBrand">
+        update ent_brand
+        set logo_url = #{logoUrl}
+        where brand_name = #{brandName}
+    </update>
+
+    <delete id="deleteBrandById" parameterType="Long">
+        delete
+        from ent_brand
+        where brand_id = #{brandId}
+    </delete>
+
+    <delete id="deleteBrandByIds" parameterType="String">
+        delete from ent_brand where brand_id in
+        <foreach item="brandId" collection="array" open="(" separator="," close=")">
+            #{brandId}
+        </foreach>
+    </delete>
+</mapper>

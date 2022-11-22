@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.u2.business.enterprise.dao.EntPurchaseMapper">
+
+    <resultMap type="EntPurchase" id="purchaseResult">
+        <result property="purchaseId" column="id"/>
+        <result property="sn" column="sn"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="location" column="location"/>
+        <result property="money" column="money"/>
+        <result property="num" column="product_num"/>
+        <result property="status" column="status"/>
+        <result property="reason" column="reason"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <association property="dept" javaType="SysDept" resultMap="deptResult"/>
+    </resultMap>
+
+    <resultMap id="deptResult" type="SysDept">
+        <id property="id" column="dept_id"/>
+        <result property="name" column="dept_name"/>
+        <result property="ancestors" column="ancestors"/>
+        <result property="leader" column="leader"/>
+        <result property="phone" column="phone"/>
+    </resultMap>
+
+    <sql id="selectEntPurchaseVo">
+        select p.purchase_id,
+               p.sn,
+               p.dept_id,
+               p.location,
+               p.money,
+               p.num,
+               p.status,
+               p.reason,
+               p.create_time,
+               p.update_time,
+               p.create_by,
+               p.update_by,
+               d.dept_name,
+               d.ancestors,
+               d.leader,
+               d.phone
+        from ent_purchase p
+                 left join sys_dept d on p.dept_id = d.dept_id
+    </sql>
+
+    <select id="selectPurchaseList" parameterType="EntPurchase" resultMap="purchaseResult">
+        <include refid="selectEntPurchaseVo"/>
+        where p.del_flag = '0'
+        <if test="sn != null  and sn != ''">and p.sn = #{sn}</if>
+        <if test="deptId != null and deptId != 0">and find_in_set(#{deptId}, d.ancestors)</if>
+        <if test="status != null and status != ''">and p.status = #{status}</if>
+        <if test="deptName != null and deptName != ''">and d.dept_name like concat('%', #{deptName}, '%')</if>
+        <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+            and date_format(p.create_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+        </if>
+        <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+            and date_format(p.create_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+        </if>
+    </select>
+
+    <select id="selectPurchaseById" parameterType="Long" resultMap="purchaseResult">
+        <include refid="selectEntPurchaseVo"/>
+        where p.purchase_id = #{purchaseId} and p.del_flag = '0'
+    </select>
+
+    <select id="selectPurchaseBySn" parameterType="String" resultMap="purchaseResult">
+        <include refid="selectEntPurchaseVo"/>
+        where p.sn = #{sn} and p.del_flag = '0'
+    </select>
+
+    <insert id="insertPurchase" parameterType="EntPurchase" useGeneratedKeys="true" keyProperty="purchaseId">
+        insert into ent_purchase(
+        <if test="purchaseId != null and purchaseId != 0">sn,</if>
+        <if test="deptId != null and deptId != 0">dept_id,</if>
+        <if test="sn != null and sn != ''">sn,</if>
+        <if test="location != null and location != ''">location,</if>
+        <if test="money != null and money != ''">money,</if>
+        <if test="num != null and num != ''">num,</if>
+        <if test="status != null and status != ''">status,</if>
+        <if test="reason != null and reason != ''">reason,</if>
+        <if test="createBy != null and createBy != ''">create_by,</if>
+        create_time
+        )value (
+        <if test="purchaseId != null and purchaseId != 0">#{purchaseId},</if>
+        <if test="deptId != null and deptId != 0">#{deptId},</if>
+        <if test="sn != null and sn != ''">#{sn},</if>
+        <if test="location != null and location != ''">#{location},</if>
+        <if test="money != null and money != ''">#{money},</if>
+        <if test="num != null and num != ''">#{productNum},</if>
+        <if test="status != null and status !=''">#{status},</if>
+        <if test="reason != null and reason != ''">#{reason},</if>
+        <if test="createBy != null and createBy != ''">#{createBy},</if>
+        sysdate()
+        )
+    </insert>
+
+    <update id="updatePurchase" parameterType="EntPurchase">
+        update ent_purchase
+        <set>
+            <if test="deptId != null and deptId != 0">dept_id = #{deptId},</if>
+            <if test="sn != null and sn != ''">sn = #{sn},</if>
+            <if test="location != null and location != ''">location = #{location},</if>
+            <if test="money != null and money != ''">money = #{money},</if>
+            <if test="num != null and num != ''">num = #{productNum},</if>
+            <if test="status != null and status !=''">status = #{status},</if>
+            <if test="reason != null and reason != ''">reason = #{reason},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where purchase_id = #{purchaseId}
+    </update>
+
+    <delete id="deletePurchaseById" parameterType="Long">
+        update ent_purchase
+        set del_flag = '2'
+        where purchase_id = #{purchaseId}
+    </delete>
+
+    <select id="checkSnUnique" parameterType="String" resultMap="purchaseResult">
+        select purchase_id, sn
+        from ent_purchase
+        where sn = #{sn}
+          and del_flag = '0'
+        limit 1
+    </select>
+</mapper>

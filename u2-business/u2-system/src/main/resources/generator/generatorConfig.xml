@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <context id="Mysql" targetRuntime="MyBatis3Simple" defaultModelType="flat">
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+        
+        <!-- 配置 GeneralDAO -->
+        <!--GeneralDao继续Mapper和MySqlMapper，然后生成的DAO接口都继续GeneralDao-->
+        <!--public interface GeneralDao<T> extends Mapper<T>, MySqlMapper<T>-->
+        <!--GeneralDao和生成的Dao接口不能放在同个包中-->
+        <plugin type="tk.mybatis.mapper.generator.MapperPlugin">
+            <property name="mappers" value="tk.mybatis.mapper.MyMapper"/>
+        </plugin>
+
+        <!-- 配置数据库连接 -->
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+                        connectionURL="jdbc:mysql://192.168.244.129:3306?characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=GMT%2B0"
+                        userId="root"
+                        password="luowei4628@()">
+        </jdbcConnection>
+
+        <!-- 配置生成实体类存放路径 -->
+        <javaModelGenerator targetPackage="com.u2.business.system.domain" targetProject="src/main/java"/>
+
+        <!-- 配置生成的 XML 存放路径 -->
+        <sqlMapGenerator targetPackage="mapper" targetProject="src/main/resources"/>
+
+        <!-- 配置生成的 DAO 存放路径 -->
+        <javaClientGenerator targetPackage="com.u2.business.system.dao" targetProject="src/main/java" type="XMLMAPPER"/>
+
+        <!-- 配置需要指定生成的数据库和表，% 代表所有表 -->
+        <table catalog="u2_admin" tableName="sys_user" schema="SCOTT">
+            <property name="ignoreQualifiersAtRuntime" value="true"/>
+            <generatedKey column="user_id" sqlStatement="Mysql" identity="true"/>
+        </table>
+    </context>
+</generatorConfiguration>

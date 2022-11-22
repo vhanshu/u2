@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.u2.business.enterprise.dao.EntPurchaseItemMapper">
+
+    <resultMap type="EntPurchaseItem" id="purchaseItemResult">
+        <result property="id" column="id"/>
+        <result property="purchaseId" column="purchase_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="num" column="num"/>
+        <result property="money" column="money"/>
+        <association property="purchase" column="purchase_id" javaType="EntPurchase" resultMap="purchaseResult"/>
+        <association property="product" column="product_id" javaType="EntProduct" resultMap="productResult"/>
+    </resultMap>
+
+    <resultMap type="EntPurchase" id="purchaseResult">
+        <id property="purchaseId" column="purchase_id"/>
+        <result property="sn" column="sn"/>
+        <result property="location" column="location"/>
+        <result property="delFlag" column="location"/>
+    </resultMap>
+
+    <resultMap type="EntProduct" id="productResult">
+        <id property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="price" column="price"/>
+    </resultMap>
+
+    <sql id="selectPurchaseItemVo">
+        select i.id,
+               i.product_id,
+               i.purchase_id,
+               i.num,
+               i.money,
+               c.sn,
+               c.location,
+               c.del_flag,
+               p.product_name,
+               p.price,
+               p.image_url
+        from ent_purchase_item i
+                 join ent_purchase c on i.purchase_id = c.purchase_id
+                 join ent_product p on i.product_id = p.product_id
+    </sql>
+
+    <select id="selectPurchaseItemList" parameterType="EntPurchaseItem" resultMap="purchaseItemResult">
+        <include refid="selectPurchaseItemVo"/>
+        where c.del_flag = '0'
+        <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+        <if test="purchaseId != null and purchaseId != 0 ">and i.purchase_id = #{purchaseId}</if>
+    </select>
+
+    <select id="selectPurchaseItemById" parameterType="Long" resultMap="purchaseItemResult">
+        <include refid="selectPurchaseItemVo"/>
+        where i.id = #{id} and c.del_flag = '0'
+    </select>
+
+    <select id="selectPurchaseItemListByPurchaseId" parameterType="Long" resultMap="purchaseItemResult">
+        <include refid="selectPurchaseItemVo"/>
+        where i.purchaseId = #{purchaseId} and c.del_flag = '0'
+    </select>
+
+    <select id="selectPurchaseItemListBySn" parameterType="String" resultMap="purchaseItemResult">
+        <include refid="selectPurchaseItemVo"/>
+        where c.sn = #{sn} and c.del_flag = '0'
+    </select>
+
+    <insert id="insertPurchaseItem" parameterType="EntPurchaseItem" useGeneratedKeys="true" keyProperty="id">
+        insert into ent_purchase_item(
+        <if test="productId != null">product_id,</if>
+        <if test="purchaseId != null">purchase_id,</if>
+        <if test="num != null">num,</if>
+        <if test="money != null">money</if>
+        )value (
+        <if test="productId != null">#{productId},</if>
+        <if test="purchaseId != null">#{purchaseId},</if>
+        <if test="num != null">#{num},</if>
+        <if test="money != null">#{money}</if>
+        )
+    </insert>
+
+    <update id="updatePurchaseItem" parameterType="EntPurchaseItem">
+        update ent_purchase_item
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="purchaseId != null">purchase_id = #{purchaseId},</if>
+            <if test="num != null">num = #{num},</if>
+            <if test="money != null">money = #{money},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePurchaseItemById" parameterType="Long">
+        delete
+        from ent_purchase_item
+        where id = #{id}
+    </delete>
+
+    <delete id="deletePurchaseItemByIds" parameterType="String">
+        delete from ent_purchase_item where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
